@@ -2,33 +2,47 @@
     {{ title }}
 </h2>
 
+<h3 *ngIf="newFavourite$ | async as newFavourite">
+    Product {{ newFavourite.name }} added to your favourites!
+</h3>
+
 <div class="right">
+    {{ productsNumber$ | async }} products
+    <span *ngIf="filtered$ | async">(filtered)</span> /
+
     {favourites, plural,
     =0 {no favourite}
     =1 {1 favourite}
     other {{{favourites}} favourites}
     }
 </div>
-<div> 
-    <!-- Search: <input type="text" [formControl]="filter" placeholder="filter by name"> -->
+<div>
+    Search: <input type="text" [formControl]="filter" placeholder="filter by name">
     &nbsp;
 </div>
 
-<ng-template #loading>
-    <h2 class="loading">Loading products</h2>
-</ng-template>
+<div *ngIf="filteredProducts$ | withLoading | async as obs">
+    <ng-template [ngIf]="obs.value">
+        <ul class="products">
+            <li *ngFor="let product of obs.value | slice:start:end"
+                (click)="onSelect(product)"
+                [class.discontinued]="product.discontinued"
+                [class.selected]="selectedProduct === product"
+                [title]="product | json">
+                <span class="name">{{ product.name | uppercase }}</span>
+                <span class="description">{{ product.description }}</span>
+                <span class="price">{{ product.price | currency:'CAD':'symbol-narrow':'.2' }}</span>
+            </li>
+        </ul>
+    </ng-template>
+    <ng-template [ngIf]="obs.error">
+        <h2 class="errorMessage">Error! {{ obs.error }}</h2>
+    </ng-template>
+    <ng-template [ngIf]="obs.loading">
 
-<ul class="products" *ngIf="products$ | async as products;else loading">
-    <li *ngFor="let product of products | slice:start:end"
-        (click)="onSelect(product)"
-        [class.discontinued]="product.discontinued"
-        [class.selected]="selectedProduct === product"
-        [title]="product | json">
-        <span class="name">{{ product.name | uppercase }}</span>
-        <span class="description">{{ product.description }}</span>
-        <span class="price">{{ product.price | currency:'CAD':'symbol-narrow':'.2' }}</span>
-    </li>
-</ul>
+    </ng-template>
+</div>
+
 
 <div class="right">
     <button (click)="refresh()">Refresh List</button>&nbsp;
@@ -41,7 +55,8 @@
         < Previous Page
     </button>
     Page {{ currentPage }}
-    <button (click)="nextPage()">
+    <button (click)="nextPage()"
+            [disabled]="(productsNumber$ | async) <= end">
         Next Page >
     </button>
 </div>

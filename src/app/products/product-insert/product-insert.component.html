@@ -1,5 +1,5 @@
 <h2>New Product</h2>
-<form #form [formGroup]="insertForm" (ngSubmit)="onSubmit()">
+<form #form [formGroup]="insertForm">
        <label for="name">Name:</label>
        <input id="name" type="text" formControlName="name">
        <div *ngIf="name.touched && name.errors" class="errorMessage">

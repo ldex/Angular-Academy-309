@@ -11,7 +11,7 @@ import { exhaustMap } from 'rxjs/operators';
   templateUrl: './product-insert.component.html',
   styleUrls: ['./product-insert.component.css']
 })
-export class ProductInsertComponent implements OnInit {
+export class ProductInsertComponent implements OnInit, AfterViewInit {
 
   insertForm: FormGroup;
   name: FormControl;
@@ -19,18 +19,15 @@ export class ProductInsertComponent implements OnInit {
   description: FormControl;
   imageUrl: FormControl;
 
-  constructor(
-    private fb: FormBuilder,
-    private productService: ProductService,
-    private router: Router
-  ) { }
+  @ViewChild("form") form: ElementRef;
 
-  onSubmit() {
-    const newProduct = this.insertForm.value;
-    console.log(newProduct);
-    this
-      .productService
-      .insertProduct(newProduct)
+  ngAfterViewInit(): void {
+    fromEvent(this.form.nativeElement, 'submit')
+      .pipe(
+        exhaustMap(() => this
+          .productService
+          .insertProduct(this.insertForm.value))
+      )
       .subscribe(
         product => {
           console.log('Product saved with id: ' + product.id);
@@ -40,6 +37,28 @@ export class ProductInsertComponent implements OnInit {
         error => console.log('Could not save product: ' + error)
       )
   }
+
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+    private router: Router
+  ) { }
+
+  // onSubmit() {
+  //   const newProduct = this.insertForm.value;
+  //   console.log(newProduct);
+  //   this
+  //     .productService
+  //     .insertProduct(newProduct)
+  //     .subscribe(
+  //       product => {
+  //         console.log('Product saved with id: ' + product.id);
+  //         this.productService.initProducts();
+  //         this.router.navigateByUrl('/products');
+  //       },
+  //       error => console.log('Could not save product: ' + error)
+  //     )
+  // }
 
   ngOnInit() {
     let validImgUrlRegex: string = '^(https?\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,5}(?:\/\S*)?(?:[-A-Za-z0-9+&@#/%?=~_|!:,.;])+\.(?:jpg|jpeg|gif|png))$';
